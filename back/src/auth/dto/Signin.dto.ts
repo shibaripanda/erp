@@ -8,4 +8,8 @@ export class SigninDto {
   @IsString()
   @IsNotEmpty()
   readonly password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly deviceId: string;
 }

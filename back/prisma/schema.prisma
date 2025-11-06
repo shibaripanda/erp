@@ -8,8 +8,25 @@ datasource db {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  user_id String @unique
-  password String
+  id           Int       @id @default(autoincrement())
+  user_id      String    @unique
+  password     String
   refresh_token String?
+
+  sessions     Session[] // обратное отношение для Session
+}
+
+model Session {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  refreshTokenHash String
+  deviceId         String   
+  expiresAt       DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
 }

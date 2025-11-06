@@ -3,9 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(cookieParser());
   const configService = app.get(ConfigService);
   const PORT = configService.get<number>('PORT')!;
   app.useGlobalPipes(new ValidationPipe());
