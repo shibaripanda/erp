@@ -1,40 +1,72 @@
-import { Body, Controller, Delete, Get, Post, Put } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileService } from './file.service';
-import { UploadFileDto } from './dto/UploadFile.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from 'multer.config';
+import { Response } from 'express';
+import { UniversalJwtGuard } from 'src/guards/universalJwtGuard';
 
 @Controller('file')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
+  @UseGuards(UniversalJwtGuard)
   @Post('/upload')
-  signin(@Body() data: UploadFileDto) {
-    console.log(data);
-    // return this.authService.signin();
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    const record = await this.fileService.createFileRecord(file);
+    return { message: 'Файл успешно загружен', record };
   }
 
+  @UseGuards(UniversalJwtGuard)
   @Get('/list')
-  getFileList(@Body() data: UploadFileDto) {
-    console.log(data);
-    // return this.authService.signin(); list_size 10, page 1
+  async getFileList(
+    @Query('list_size') list_size: string,
+    @Query('page') page: string,
+  ) {
+    return await this.fileService.getFiles(
+      Number(page) || 1,
+      Number(list_size) || 10,
+    );
   }
 
-  @Delete('/delete')
-  deleteFileById() {
-    // return this.authService.signin(); :id
+  @UseGuards(UniversalJwtGuard)
+  @Delete('/delete/:id')
+  async deleteFileById(@Param('id') id: string) {
+    await this.fileService.deleteFileById(Number(id));
   }
 
-  @Get('/file')
-  getFileDataById() {
-    // return this.authService.signin(); :id
+  @UseGuards(UniversalJwtGuard)
+  @Get('/:id')
+  async getFileDataById(@Param('id') id: string) {
+    return await this.fileService.getFile(Number(id));
   }
 
-  @Get('/download')
-  downloadFileById() {
-    // return this.authService.signin(); :id
+  @UseGuards(UniversalJwtGuard)
+  @Get('/download/:id')
+  async downloadFileById(@Param('id') id: string, @Res() res: Response) {
+    return await this.fileService.downloadFileById(Number(id), res);
   }
 
-  @Put('/update')
-  updateFileById() {
-    // return this.authService.signin(); :id
+  @UseGuards(UniversalJwtGuard)
+  @Put('/update/:id')
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async updateFileById(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('id') id: string,
+  ) {
+    const record = await this.fileService.updateFileRecord(file, Number(id));
+    return { message: 'Файл успешно обновлен', record };
   }
 }

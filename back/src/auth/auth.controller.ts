@@ -2,16 +2,15 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Req,
   Res,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SigninDto } from './dto/Signin.dto';
 import { RefreshTokenDto } from './dto/RefreshToken.dto';
-import { UniversalJwtGuard } from './guards/universalJwtGuard';
 import { Request, Response } from 'express';
 import { SessionService } from 'src/session/session.service';
 import * as bcrypt from 'bcrypt';
@@ -76,9 +75,15 @@ export class AuthController {
     return { accessToken };
   }
 
-  @UseGuards(UniversalJwtGuard)
-  @Get('/logout')
-  logout() {
-    return 'logout';
+  @Get('/logout/:deviceid')
+  async logout(@Param('deviceid') deviceid: string, @Req() req: Request) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const current_refreshToken = req.cookies['refresh_token'] as string;
+    console.log(current_refreshToken, deviceid);
+    const session =
+      await this.sessionService.findByRefreshToken(current_refreshToken);
+    if (!session) throw new UnauthorizedException();
+    await this.sessionService.delete(session.id);
+    return { message: 'ok' };
   }
 }

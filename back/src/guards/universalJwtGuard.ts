@@ -14,7 +14,7 @@ interface RequestWithUser extends Request {
 
 @Injectable()
 export class UniversalJwtGuard implements CanActivate {
-  constructor(private readonly jwt: JwtService) {}
+  constructor(private jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const type = context.getType<'http'>();
@@ -27,10 +27,13 @@ export class UniversalJwtGuard implements CanActivate {
       if (!token) throw new UnauthorizedException('Token not provided');
 
       try {
-        const payload = this.jwt.verify<User>(token);
+        const payload = this.jwtService.verify<User>(token, {
+          secret: process.env.SECRET_KEY || 'superrefreshkey',
+        });
         request.user = payload;
         return true;
-      } catch {
+      } catch (e) {
+        console.log(e);
         throw new UnauthorizedException('Invalid token');
       }
     }

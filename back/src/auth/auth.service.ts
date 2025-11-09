@@ -89,7 +89,7 @@ export class AuthService {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      path: '/signin/new_token',
+      path: '/',
       maxAge: 365 * 24 * 60 * 60 * 1000,
     });
   }
